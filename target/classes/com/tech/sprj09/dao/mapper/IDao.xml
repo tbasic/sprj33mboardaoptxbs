@@ -1,0 +1,122 @@
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.tech.sprj09.dao.IDao">
+	<sql id="includelist">
+		<choose>
+		    <when test="param4==1">
+		      WHERE BTITLE LIKE '%'||#{param3}||'%'
+		    </when>
+		   <when test="param4==2">
+		      WHERE BCONTENT LIKE '%'||#{param3}||'%'
+		    </when>
+		    <when test="param4==3">
+		      WHERE BCONTENT LIKE '%'||#{param3}||'%' OR BTITLE LIKE '%'||#{param3}||'%'
+		    </when>
+		    <otherwise>
+		      
+		    </otherwise>
+	  </choose>
+	</sql>
+
+
+    <select id="selectBoardTotCount1" resultType="Integer">
+    	SELECT COUNT(*) FROM MBOARD WHERE BTITLE LIKE '%'||#{param1}||'%'
+    </select>
+    <select id="selectBoardTotCount2" resultType="Integer">
+    	SELECT COUNT(*) FROM MBOARD WHERE BCONTENT LIKE '%'||#{param1}||'%'
+    </select>
+    <select id="selectBoardTotCount3" resultType="Integer">
+    	SELECT COUNT(*) FROM MBOARD WHERE BCONTENT LIKE '%'||#{param1}||'%' OR BTITLE LIKE '%'||#{param1}||'%'
+    </select>
+    <select id="selectBoardTotCount4" resultType="Integer">
+    	SELECT COUNT(*) FROM MBOARD
+    </select>
+
+
+    <select id="list" resultType="com.tech.sprj09.dto.BoardDto">	
+	<!-- 	SELECT BID,BNAME,BTITLE,BCONTENT,BDATE,
+		BHIT,BGROUP,BSTEP,BINDENT
+		FROM (SELECT ROWNUM NUM, N.* FROM 
+		(SELECT * FROM MBOARD ORDER BY BDATE DESC) N)
+		WHERE NUM BETWEEN #{param1} AND #{param2} -->
+		
+		<!-- SELECT BID,BNAME,BTITLE,BCONTENT,
+		BDATE,BHIT,BGROUP,BSTEP,BINDENT
+		FROM (SELECT ROWNUM NUM, N.* FROM 
+		(SELECT * FROM MBOARD ORDER BY 
+		BGROUP DESC, BSTEP ASC) N)
+		WHERE NUM BETWEEN #{param1} AND #{param2} -->
+		
+		SELECT BID,BNAME,BTITLE,BCONTENT,
+		BDATE,BHIT,BGROUP,BSTEP,BINDENT
+		FROM (SELECT ROWNUM NUM, N.* FROM 
+		(SELECT * FROM MBOARD ORDER BY 
+		BGROUP DESC, BSTEP ASC) N
+        <include refid="includelist" />
+        )
+		WHERE NUM BETWEEN #{param1} AND #{param2}
+		
+    </select>
+    <insert id="write">
+    	INSERT INTO MBOARD(BID,BNAME,BTITLE,BCONTENT,
+    	BDATE,BHIT,BGROUP,BSTEP,BINDENT,FILESRC)
+		VALUES(MBOARD_SEQ.NEXTVAL,#{param1},#{param2},#{param3},
+		SYSDATE,0,MBOARD_SEQ.CURRVAL,0,0,#{param4})
+    
+    </insert>
+    <select id="contentview"  resultType="com.tech.sprj09.dto.BoardDto">
+    	SELECT BID,BNAME,BTITLE,BCONTENT,
+    	BDATE,BHIT,BGROUP,BSTEP,BINDENT,FILESRC
+		FROM MBOARD WHERE BID=#{param1}
+    </select>
+    <select id="contentupdate"  resultType="com.tech.sprj09.dto.BoardDto">
+    	SELECT BID,BNAME,BTITLE,BCONTENT,
+    	BDATE,BHIT,BGROUP,BSTEP,BINDENT,FILESRC
+		FROM MBOARD WHERE BID=#{param1}
+    </select>
+	
+	<update id="upHit">
+		UPDATE MBOARD SET BHIT=BHIT+1
+		WHERE BID=#{param1}
+	
+	</update>
+	<update id="modify">
+		UPDATE MBOARD SET BNAME=#{param2},
+		BTITLE=#{param3}, BCONTENT=#{param4}
+		 WHERE BID=#{param1}
+	</update>
+	<delete id="delete">
+		DELETE FROM MBOARD WHERE BID=#{param1}
+	</delete>
+	<select id="replyview"  resultType="com.tech.sprj09.dto.BoardDto">
+    	SELECT BID,BNAME,BTITLE,BCONTENT,
+    	BDATE,BHIT,BGROUP,BSTEP,BINDENT
+		FROM MBOARD WHERE BID=#{param1}
+    </select>
+    
+    <update id="replyShape">
+    	UPDATE MBOARD
+		SET BSTEP=BSTEP+1 
+		WHERE BGROUP=#{param1} AND BSTEP>#{param2}
+    </update>
+    
+    <insert id="reply">
+    	INSERT INTO MBOARD(BID,BNAME,BTITLE,BCONTENT,
+			BDATE,BGROUP,BSTEP,BINDENT) 
+			VALUES(MBOARD_SEQ.NEXTVAL,
+			#{param2},#{param3},
+			#{param4},
+			SYSDATE,#{param5},
+			#{param6}+1,#{param7}+1)
+    </insert>
+	<select id="sonReply" resultType="com.tech.sprj09.dto.BoardDto">
+		SELECT * FROM MBOARD WHERE BGROUP=#{param1}
+			ORDER BY BSTEP ASC
+	
+	</select>
+    
+    
+	
+</mapper>
